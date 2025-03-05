@@ -1,11 +1,24 @@
 
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { getAuth } from 'firebase/auth';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { auth } from '../../FirebaseConfig';
 
 export default function TabOneScreen() {
 
+  const router = useRouter();
+
+  // useEffect(() => {
+  //   const unsubscribe = getAuth().onAuthStateChanged((user) => {
+  //     console.log('LLL:', user);
+      
+  //     if (!user) {
+  //       console.log('HHH:', user);
+  //       router.replace('./');
+  //     }
+  //   });
+  //   return unsubscribe;
+  // }, []);
   getAuth().onAuthStateChanged((user) => {
     if (!user) router.replace('/');
   });

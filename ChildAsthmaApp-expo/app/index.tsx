@@ -1,14 +1,19 @@
 
-import { router } from 'expo-router'
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth'
-import React, { useState } from 'react'
+import { router, Slot, useRootNavigationState } from 'expo-router'
+import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword } from 'firebase/auth'
+import React, { useEffect, useState } from 'react'
 import { SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity } from 'react-native'
 import { auth } from '../FirebaseConfig'
-
 
 const index = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    //index.tsx
+
+
+    const rootNavigationState = useRootNavigationState();
+
+    if (!rootNavigationState?.key) return <Slot></Slot>;
 
 
     const signIn = async () => {
@@ -30,6 +35,14 @@ const index = () => {
             alert('Sign in failed: ' + error.message);
         }
     }
+    useEffect(() => {
+        const unsubscribe = getAuth().onAuthStateChanged((user) => {
+            if (user) {
+                router.replace('/(tabs)');
+            }
+        });
+        return unsubscribe;
+    }, []);
 
     return (
         <SafeAreaView style={styles.container}>
