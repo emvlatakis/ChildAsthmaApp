@@ -3,7 +3,6 @@ import { Link, Tabs } from 'expo-router';
 import React from 'react';
 import { Pressable } from 'react-native';
 
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 
@@ -24,15 +23,15 @@ export default function TabLayout() {
                 tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
                 // Disable the static render of the header on web
                 // to prevent a hydration error in React Navigation v6.
-                headerShown: useClientOnlyValue(false, true),
+                headerShown: false,
             }}>
             <Tabs.Screen
                 name="index"
                 options={{
-                    title: 'Tab One',
+                    title: 'Sign Out',
                     tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
                     headerRight: () => (
-                        <Link href="/modal" asChild>
+                        <Link href={'/modal' as any} asChild>
                             <Pressable>
                                 {({ pressed }) => (
                                     <FontAwesome
@@ -50,7 +49,21 @@ export default function TabLayout() {
             <Tabs.Screen
                 name="two"
                 options={{
-                    title: 'Tab Two',
+                    title: 'Database',
+                    tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+                }}
+            />
+            <Tabs.Screen
+                name="three"
+                options={{
+                    title: 'Storage',
+                    tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+                }}
+            />
+            <Tabs.Screen
+                name="four"
+                options={{
+                    title: 'Functions',
                     tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
                 }}
             />

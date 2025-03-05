@@ -1,61 +1,49 @@
-
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { Stack, useRouter, useSegments } from 'expo-router';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
-
-import { useColorScheme } from '@/components/useColorScheme';
-
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary
-} from 'expo-router';
-
-export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
-};
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+import { auth } from '../FirebaseConfig';
 
 export default function RootLayout() {
-  const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    ...FontAwesome.font,
-  });
-
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
-  useEffect(() => {
-    if (error) throw error;
-  }, [error]);
+  const [initializing, setInitializing] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const router = useRouter();
+  const segments = useSegments();
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      console.log('onAuthStateChanged', firebaseUser?.email ?? 'no user');
+      setUser(firebaseUser);
+      if (initializing) setInitializing(false);
+    });
+    return () => unsubscribe();
+  }, [initializing]);
+
+  useEffect(() => {
+    if (initializing) {
+      console.log('Still initializing, skipping navigation check');
+      return;
     }
-  }, [loaded]);
+    const inAuthGroup = segments[0] === '(tabs)';
+    console.log('Navigation check:', {
+      isAuthenticated: !!user,
+      currentSegment: segments[0],
+      inAuthGroup
+    });
 
-  if (!loaded) {
-    return null;
-  }
-
-  return <RootLayoutNav />;
-}
-
-function RootLayoutNav() {
-  const colorScheme = useColorScheme();
+    if (user && !inAuthGroup) {
+      console.log('Authenticated user not in auth group, redirecting to /(tabs)');
+      router.replace('/(tabs)/home');
+    } else if (!user && inAuthGroup) {
+      console.log('Unauthenticated user in auth group, redirecting to /');
+      router.replace('/');
+    }
+  }, [initializing, user, segments]);
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
-    </ThemeProvider>
+    <Stack>
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+    </Stack>
   );
 }
